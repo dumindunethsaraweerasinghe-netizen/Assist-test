@@ -1,0 +1,66 @@
+name: Build downloads
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: --noconsole
+            artifact: ScreenAssistant-Windows.zip
+          - os: macos-latest
+            args: --windowed --hidden-import AppKit
+            artifact: ScreenAssistant-Mac.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Insert free Gemini key
+        shell: python
+        env:
+          KEY: ${{ secrets.GEMINI_KEY }}
+        run: |
+          import os
+          s = open("screen_assistant.py", encoding="utf-8").read()
+          s = s.replace('EMBEDDED_KEY = ""', 'EMBEDDED_KEY = "%s"' % os.environ.get("KEY", ""))
+          open("screen_assistant.py", "w", encoding="utf-8").write(s)
+
+      - name: Build app
+        run: pyinstaller ${{ matrix.args }} --name ScreenAssistant screen_assistant.py
+
+      - name: Zip Windows app
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path dist/ScreenAssistant -DestinationPath ScreenAssistant-Windows.zip
+
+      - name: Hide Mac app from the Dock
+        if: runner.os == 'macOS'
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" dist/ScreenAssistant.app/Contents/Info.plist
+          codesign --force --deep --sign - dist/ScreenAssistant.app
+
+      - name: Zip Mac app
+        if: runner.os == 'macOS'
+        run: cd dist && zip -r ../ScreenAssistant-Mac.zip ScreenAssistant.app
+
+      - name: Publish download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'latest-build' }}
+          files: ${{ matrix.artifact }}
