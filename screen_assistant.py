@@ -42,7 +42,7 @@ from pynput import keyboard
 # ───────────────────────────── CONFIG ─────────────────────────────
 # "-latest" aliases follow Google's current model so this keeps working as they
 # retire old ones. If it ever fails, the app auto-picks an available Flash model.
-MODEL = "gemini-flash-lite-latest"        # fastest. Try "gemini-flash-latest" for smarter answers
+MODEL = "gemini-2.5-flash"        # fastest. Try "gemini-flash-latest" for smarter answers
 HOTKEY_ANALYZE = "<f8>"
 HOTKEY_ASK = "<f9>"
 HOTKEY_DISMISS = "<f10>"
