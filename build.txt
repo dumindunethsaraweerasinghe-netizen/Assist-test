@@ -1,0 +1,23 @@
+Build a standalone app (no Python needed by the end user)
+=========================================================
+PyInstaller can only build for the OS it runs on, so build once on each OS.
+(Easiest: let the included GitHub workflow do it - see chat instructions.)
+
+  pip install -r requirements.txt pyinstaller
+
+Windows  ->  dist\ScreenAssistant\ScreenAssistant.exe   (folder build = instant startup)
+  pyinstaller --noconsole --name ScreenAssistant screen_assistant.py
+  Then zip the dist\ScreenAssistant FOLDER and share the zip.
+  The other person unzips it and double-clicks ScreenAssistant.exe.
+  (--onefile makes a single exe but unpacks itself every launch = 3-6s slower start.)
+
+macOS    ->  dist/ScreenAssistant.app
+  pyinstaller --windowed --hidden-import AppKit --name ScreenAssistant screen_assistant.py
+  Hide from Dock + re-sign:
+  /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" dist/ScreenAssistant.app/Contents/Info.plist
+  codesign --force --deep --sign - dist/ScreenAssistant.app
+
+Linux    ->  dist/ScreenAssistant/
+  pyinstaller --name ScreenAssistant screen_assistant.py
+
+Quit the app any time with F12. Errors are logged to ~/.screen_assistant.log

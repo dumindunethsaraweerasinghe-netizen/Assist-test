@@ -1,0 +1,5 @@
+requests
+mss
+Pillow
+pynput
+pyobjc-framework-Cocoa; sys_platform == "darwin"
